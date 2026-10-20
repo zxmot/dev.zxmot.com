@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>使用样例演示状态机功能</title>
+	<style>
+		html, body {margin: 0; padding: 0}
+		h1 {margin: 24px}
+		#lib-state { font: 14px/1.6 ui-monospace, monospace; }
+		.state-key { color: #6a737d; }
+		.state-value { color: #032f62; font-weight: 600; }
+		.state-kind { color: #666; }
+	</style>
+</head>
+<body>
+
+<h1>通过功能节点树和状态树，测试并验证状态机系统</h1>
+
+<div style="display: flex">
+	<div style="flex: 1">
+		<div id="lib-state" style="padding: 4px 8px; background: #eef"></div>
+		<div id="app-point" style="background: #fff; padding: 8px 24px"></div>
+	</div>
+	<div style='width: 400px;'>
+		<div>
+			<button onclick="temperature(2)">
+				温度+2
+			</button>
+			<button onclick="temperature(-2)">
+				温度-2
+			</button>
+			<button onclick="testing.conf_slow()">
+				放慢节奏
+			</button>
+			<button onclick="testing.conf_fast()">
+				加快节奏
+			</button>
+			<button onclick="testing.reset_logs()">
+				清除日志
+			</button>
+		</div>
+		<div id="logger" style="white-space: break-spaces; word-break: break-all; max-height: 80vh; overflow: auto">
+			系统状态的变化日志
+		</div>
+	</div>
+</div>
+
+<div id="previewer" style="white-space: break-spaces"></div>
+<!-- 以上代码为页面模板，不要考虑 -->
+
+<script src="./_lib.js"></script>
+<script src="./demo.js"></script>
+<script>
+	const kinds = {
+		time: '时序更新',
+		present: '有人变化！',
+		temperature: '环境温度',
+		ac_cooler: '空调制冷',
+	};
+	_lib.root = {
+		name: 'Example 样例展示',
+		children: [{
+			name: '手动·控制面板',
+			note: '手动操控用于调试系统',
+			children: [{
+				name: '模拟当前的随机温度环境', type: 'button',
+				click: () => {
+					_lib.dispatch('temperature', Math.floor(Math.random() * 40));
+				},
+			}],
+		}],
+		hooks: [{
+			name: '用于打印日志',
+			hook: (key, value) => {
+				_lib.logs('_内部_' + (kinds[key] || '状态变化了'), key + ' = ' + value);
+				dev_stat.replaceChildren(render_state(_lib.state, kinds));
+			},
+		}, {
+			name: '设备列表',
+			note: '',
+			hooks: [{
+				name: '空调制冷',
+				note: '可考虑去连接真实的硬件',
+				on: {
+					ac_cooler: (v, prev) => {
+						if (v !== prev) {
+							_lib.logs('> 操作空调制冷，决策为', v ? '打开' : '关闭');
+							_lib.logs('$ 操作空调制冷', {want: v, temperature: state.temperature});
+						}
+					},
+				},
+			}],
+			// children: = hooks
+		}, {
+			name: '模拟输入',
+			note: '会自动触发，从而设置随机状态',
+			hooks: [{
+				name: '【模拟】室内是否有人',
+				note: '人通常是根据时间活动的',
+				on: {
+					time: () => { // 每两分钟切换是否有人的状态
+						_lib.dispatch('present', new Date().getMinutes() % 4 > 1);
+					},
+				},
+				hook: (key, value) => { // 防止自激循环
+					if (key !== 'present' && Math.random() > 0.9) {
+						_lib.dispatch('present', Math.random() > 0.5);
+					}
+				},
+			}],
+		}, {
+			name: '逻辑功能定义',
+			note: '',
+			hooks: [{
+				name: '判断是否开启空调的逻辑定义',
+				note: '如何使用 if 条件，充分地去理解环境并给出指令',
+				on: {
+					present: ifHookDispatch(( // 人回家了，若高于26度就开空调
+						v => v > 26 && _lib.state.present
+					), {key: 'ac_cooler', value: true}, {key: 'ac_cooler', value: false}),
+					temperature: ifHookDispatch(( // 温度慢慢升到28度才开空调
+						v => v > 28 && _lib.state.present
+					), {key: 'ac_cooler', value: true}, {key: 'ac_cooler', value: false}),
+				},
+			}],
+		}],
+	};
+
+	const logger = document.querySelector('#logger');
+	const dev_stat = document.querySelector('#lib-state');
+	_lib.logs = (label, value) => logger.prepend(label + '：' + JSON.stringify(value) + '\n');
+
+	function ifHookDispatch(check, ok, not) {
+		return () => {
+			const e = check() ? ok : not;
+			_lib.dispatch(e.key, e.value);
+		};
+	}
+
+	function temperature(step = 1) {
+		_lib.dispatch('temperature', v => (v ?? 25) + step);
+	}
+</script>
+
+<!-- 下边代码是页面加载和启动模板，不要考虑 -->
+<script src="../ln/init.mjs"></script>
+<script>
+	window['_load_page'] = src => {
+		import( src).then(v => {
+			document.querySelector('#app-point').replaceChildren((
+				v.page.vino()
+			));
+		});
+	};
+</script>
+
+</body>
+</html>

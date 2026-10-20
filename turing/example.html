@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>展示状态系统的基础能力</title>
+	<style>
+		html, body {margin: 0; padding: 0}
+		h1 {margin: 24px}
+		#lib-state { font: 14px/1.6 ui-monospace, monospace; }
+		.state-key { color: #6a737d; }
+		.state-value { color: #032f62; font-weight: 600; }
+	</style>
+</head>
+<body>
+
+<h1>演示状态树的基础系统能力</h1>
+
+<div style="display: flex">
+	<div style="flex: 1">
+		<div id="lib-state" style="padding: 4px 8px; background: #fff"></div>
+		<div id="app-point" style="background: #fff; padding: 8px 24px"></div>
+	</div>
+	<div style='width: 400px;'>
+		<div>
+			<button onclick="testing.conf_slow()">
+				放慢节奏
+			</button>
+			<button onclick="testing.conf_fast()">
+				加快节奏
+			</button>
+			<button onclick="testing.reset_logs()">
+				清除日志
+			</button>
+		</div>
+		<div id="logger" style="white-space: break-spaces; word-break: break-all; max-height: 80vh; overflow: auto">
+			系统状态的变化日志
+		</div>
+	</div>
+</div>
+
+<div id="previewer" style="white-space: break-spaces"></div>
+<!-- 以上代码为页面模板，不要考虑 -->
+
+<script src="./_lib.js"></script>
+<script src="./demo.js"></script>
+<script>
+	const events = {
+		counter: '计数器',
+		fib: '斐波那契数',
+	};
+	_lib.root = {
+		name: 'Example 样例展示',
+		children: [{
+			name: '基础定义和介绍',
+			note: '当 children 为空但 hooks 不为空的时候，将 hooks 同样看作为 children 节点树',
+			children: [{
+				name: 'Nodes Tree 节点树 = children || hooks',
+				note: '定义了骨架，形成数据驱动且自描述的系统，用于中控屏幕渲染',
+			}, {
+				name: 'Hooks Tree 状态树 = hooks',
+				note: '控制了节点行为的运行逻辑，智能家居的核心控制系统',
+			}],
+		}, {
+			name: '手动·控制面板',
+			note: '手动操控用于调试系统',
+			children: [{
+				name: '演示一个简单的计数器', type: 'button',
+				note: '在界面上显示一个按钮，触发状态更新',
+				click: () => {
+					_lib.dispatch('counter', (v = 0) => v + 1);
+				},
+			}],
+		}],
+		hooks: [{
+			name: '用于打印日志',
+			hook: (key, value) => {
+				_lib.logs('_内部_' + (events[key] || '状态变化了'), key + ' = ' + value);
+				dev_stat.replaceChildren(render_state(_lib.state));
+			},
+		}, {
+			name: '测试生成斐波那契数列',
+			note: '',
+			hooks: [{
+				name: '启动无限递归计算', type: 'button',
+				on: {
+					fib: (n, prev) => {
+						if (prev < 0) {return;}
+						_lib.dispatch('fib', n + prev);
+					},
+				},
+				click: () => {
+					// 必须设置一个旧值，因为需要使用到
+					_lib.state.fib = 0;
+					_lib.dispatch('fib', 1);
+				},
+			}, {
+				name: '中止斐波那契数列的生成', type: 'button',
+				note: '',
+				click: () => {
+					_lib.state.fib = -1; // 将 prev 设置为 -1 中止程序
+					// _lib.dispatch('fib', 0);
+				},
+			}],
+		}],
+	};
+
+	const logger = document.querySelector('#logger');
+	const dev_stat = document.querySelector('#lib-state');
+	_lib.logs = (label, value) => logger.prepend(label + '：' + JSON.stringify(value) + '\n');
+
+</script>
+
+<!-- 下边代码是页面加载和启动模板，不要考虑 -->
+<script src="../ln/init.mjs"></script>
+<script>
+	window['_load_page'] = src => {
+		import( src).then(v => {
+			document.querySelector('#app-point').replaceChildren((
+				v.page.vino()
+			));
+		});
+	};
+</script>
+
+</body>
+</html>
