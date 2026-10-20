@@ -140,6 +140,15 @@
   .log div.sys { color: var(--accent-2); }
   .log div:empty { display: none; }
 
+  /* ── examples ── */
+  a.card { display: block; color: inherit; }
+  a.card:hover { text-decoration: none; }
+  .card .go {
+    display: inline-block; margin-top: 10px;
+    font-family: var(--mono); font-size: 12.5px; color: var(--accent-2);
+  }
+  a.card:hover .go { color: var(--accent); }
+
   /* ── table ── */
   table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
   th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); }
@@ -167,6 +176,7 @@
       <li><a href="#features">特性</a></li>
       <li><a href="#arch">架构</a></li>
       <li><a href="#demo">演示</a></li>
+      <li><a href="#examples">样例</a></li>
       <li><a href="#api">API</a></li>
       <li><a href="#start">快速开始</a></li>
     </ul>
@@ -257,7 +267,7 @@
 <section id="demo">
   <div class="wrap">
     <h2>实时演示</h2>
-    <p class="sub">下面这段就是框架的完整实现，点按钮触发，右侧日志实时显示哪些 Hook 被命中。</p>
+    <p class="sub">下面这段就是框架的完整实现，点按钮触发，右侧日志实时显示哪些 Hook 被命中。更多完整样例见下方。</p>
     <div class="demo">
       <div class="demo-controls">
         <button data-act="theme"><span class="arrow">▸</span>dispatchAppState('theme', 'dark')</button>
@@ -272,6 +282,25 @@
       <div class="log" id="log">
         <div class="sys">// 等待事件…</div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="examples">
+  <div class="wrap">
+    <h2 style="color: hotpink">完整样例</h2>
+    <p class="sub">每个样例都是一个独立页面，打开即可运行，右侧日志实时展示状态传播过程。</p>
+    <div class="grid">
+      <a class="card" href="example.html">
+        <h3>基础能力演示</h3>
+        <p>演示状态树的基础系统能力：状态下发、纯通知、直接写入等调用语义，实时日志观察每个 Hook 的命中。</p>
+        <span class="go">打开示例 →</span>
+      </a>
+      <a class="card" href="machine.html">
+        <h3>状态机演示</h3>
+        <p>通过功能节点树和状态树，测试并验证状态机系统：调节温度触发状态迁移，观察节点联动。</p>
+        <span class="go">打开示例 →</span>
+      </a>
     </div>
   </div>
 </section>
