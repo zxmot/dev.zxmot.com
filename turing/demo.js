@@ -17,16 +17,21 @@ setTimeout(minute_timer, 60_000 - new Date().getSeconds() * 1000);
 const div = document.createElement('div');
 [{
 	name: '基础信息',
-	load: 'src/viewers/dev-tree.tsx',
+	load: 'viewers/ls-tree.mjs',
+}, {
+	name: '结构图',
+	load: 'viewers/mermaid.mjs',
 }, {
 	name: '网络图',
-	load: 'src/viewers/network.tsx',
+	load: 'viewers/network.mjs',
 }].map(it => {
 	const btn = document.createElement('button');
 	btn.textContent = it.name;
-	btn.onclick = () => _load_page('/use/opt/ramd/rid/eturing/' + it.load);
+	const base = location.origin.length < 18 ? '/use/opt/ramd/rid/eturing/src/' : './';
+	btn.onclick = () => _load_page(base + it.load);
 	div.appendChild(btn);
 });
+Object.assign(div.style, {display: 'flex', gap: '8px', padding: '8px 16px'});
 document.body.appendChild(div);
 
 // 把任意值转成可读字符串
@@ -69,7 +74,7 @@ function render_state(state, kinds = {}) {
 			note.className = 'state-kind';
 			note.textContent = kind;
 
-			row.append( ' - ', note);
+			row.append(' - ', note);
 		}
 
 		frag.append(row);
