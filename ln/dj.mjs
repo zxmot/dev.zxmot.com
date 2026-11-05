@@ -21,17 +21,16 @@ const iv = () => _('div');
 
 const plain = Object.prototype; // ({}).__proto__;
 
-const DIV = (opt, ...z) => ADD('div', opt, ...z);
-
+const ANY = (tag, ...z) => mount(_(tag), z);
 const BOX = (...z) => mount(iv(), z);
 const BTN = (text, opt) => {
 	if (typeof opt === 'function') {opt = {clk: opt};}
-	return ADD('button', opt, text);
+	return el('button', opt, text);
 };
 
 const FRAG = (...z) => mount(document.createDocumentFragment(), z);
 // TEXT 其实是一个 DIV，也可以设置为 tag = 'p'
-const TEXT = (text, props, tag = 'div') => ADD(tag, props, text);
+const TEXT = (text, props, tag = 'div') => el(tag, props, text);
 
 const _att = (d, props) => {
 	Object.entries(props).forEach(([name, value]) => {
@@ -46,15 +45,22 @@ const _att = (d, props) => {
 	return d;
 };
 
+const DIV = (opt, ...z) => el('div', opt, z);
 const ADD = (tag, opt, ...z) => {
+	if (z.length) {return el(tag, opt, z);}
+
 	const d = _(tag);
-	if (z.length === 0) { // 判断是设置属性还是添加子内容
-		return opt ? ( // obj.__proto__ === plain
-			Object.getPrototypeOf(opt) === plain ? _att(d, opt) : mount(d, opt)
-		) : ( // 防止 ADD('span', 0) 的情况
-			opt === 0 ? mount(d, '0') : d
-		);
-	}
+
+	// 判断是设置属性还是添加子内容
+	return opt ? ( // obj.__proto__ === plain
+		Object.getPrototypeOf(opt) === plain ? _att(d, opt) : mount(d, opt)
+	) : ( // 防止 ADD('span', 0) 的情况
+		opt === 0 ? mount(d, '0') : d
+	);
+};
+
+const el = (tag, opt, z) => {
+	const d = _(tag);
 	// 如果 opt 是字符串，则表示为样式类名
 	if (typeof opt === 'string') {
 		d.className = opt;
@@ -82,12 +88,11 @@ const $ = v => document.querySelector(v);
  * 约定不使用 class/className/style/onClick 属性
  */
 export {
-	_,
 	// 首先暴露出最核心的三个功能
 	$, ADD,
 	// 以下为 ADD 的语法糖封装！
 	// 优先选用以下合适的语法糖！
-	BOX, DIV,
+	ANY, BOX, DIV,
 	// 可节省代码量，使代码看起来更加清爽！
 	BTN,
 	FRAG, TEXT,
@@ -98,7 +103,8 @@ export {
 // 例如 jsx('div', {css: 'color: red'}, 'hello', 'world)
 // 没有 className/style/onClick 用更加简短的 cls/css/clk 代替
 const JSX = (tag, props, ...children) =>
-	(typeof tag === 'function') ? tag(props, children) : ADD(tag, props, ...children);
+	(typeof tag === 'function') ? tag(props, children) : el(tag, props, ...children);
 
 globalThis['jsx'] = JSX;
-export {JSX};
+export {_, el, JSX};
+export const h = JSX;
